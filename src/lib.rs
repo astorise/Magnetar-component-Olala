@@ -7,6 +7,9 @@ use serde::Deserialize;
 use std::error::Error;
 use std::fmt;
 
+pub mod geodesic;
+pub mod routing;
+
 const MAX_LAYERS: usize = 4096;
 
 /// A layer type supported by the reference Olala mini modeling code.
