@@ -20,7 +20,9 @@ Mamba-3 recurrent state, hybrid attention, mixture-of-experts routing and
 checkpoint-specific loading remain to be implemented. The necessary Magnetar
 state and graph work is tracked in [Magnetar #213](https://github.com/astorise/Magnetar/issues/213),
 Provider-side routing in [Magnetar #216](https://github.com/astorise/Magnetar/issues/216),
-and geodesic updates in [Magnetar #220](https://github.com/astorise/Magnetar/issues/220).
+geodesic updates in [Magnetar #220](https://github.com/astorise/Magnetar/issues/220),
+and differential tensor-product attention in
+[Magnetar #222](https://github.com/astorise/Magnetar/issues/222).
 
 A real implementation must identify a specific checkpoint and its license, integrate the relevant Magnetar component and runtime contracts, and validate outputs against an independent reference. See the [upstream model or project](https://huggingface.co/OVHaiLLM/Olala-v1.0-mini-7A1B). Model weights are not included.
 
