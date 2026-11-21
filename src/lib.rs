@@ -7,6 +7,7 @@ use serde::Deserialize;
 use std::error::Error;
 use std::fmt;
 
+pub mod attention_profile;
 pub mod geodesic;
 pub mod mamba3;
 pub mod routing;

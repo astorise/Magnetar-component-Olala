@@ -17,6 +17,16 @@ upstream PyTorch. The library does not load weights or implement the complete
 Mamba-3 layer, graph production, Runtime-managed recurrent state, Component
 Model exports, or inference; Olala is not yet runnable in Magnetar.
 
+The library can also validate the checkpoint's no-RoPE differential attention
+settings and derive head grouping, score scale, window and the portable CPU
+reference's query/history size limits. It lists the expected checkpoint tensors
+in operator input order, including the matrix transpositions required on load;
+their names, shapes and storage dtypes were checked against the pinned header.
+This validates a configuration profile;
+it does not make the checkpoint executable. In particular, the CPU graph's
+synthetic f32 projection fixture is not a qualification of real bfloat16
+checkpoint inference.
+
 ## Work required
 
 Mamba-3 recurrent state, hybrid attention, mixture-of-experts routing and
