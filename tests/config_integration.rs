@@ -178,3 +178,44 @@ fn attention_profile_limits_the_widest_intermediate_not_just_query() {
         AttentionProfile::from_huggingface_config(&serde_json::to_vec(&config).unwrap()).unwrap();
     assert_eq!(profile.max_query_tokens, 67_108_864 / (100000 * 128));
 }
+
+#[test]
+fn attention_invocation_plans_prefill_decode_and_validates_limits() {
+    let profile = AttentionProfile::from_huggingface_config(include_bytes!(
+        "fixtures/olala-mini.config.json"
+    ))
+    .unwrap();
+    let first = profile.plan_sequence(4, 3, 0).unwrap();
+    assert_eq!(first.operator, "projected-differential-attention");
+    assert_eq!(first.input_shapes.len(), 17);
+    assert_eq!(first.output_shapes.len(), 5);
+    assert_eq!(first.input_shapes[0], vec![3, 1536]);
+    assert_eq!(first.input_shapes[1], vec![12, 128]);
+    assert_eq!(first.input_shapes[3], vec![1, 12, 128]);
+    assert_eq!(first.input_shapes[5], vec![3]);
+    assert_eq!(first.input_shapes[6], vec![1536, 48 * 128]);
+    assert_eq!(first.output_shapes[0], vec![3, 36, 128]);
+    assert_eq!(first.output_shapes[3], vec![3, 12, 128]);
+    assert!(first.round_bfloat16);
+    let next = profile.plan_sequence(4, 1, 3).unwrap();
+    assert_eq!(next.input_shapes[3], vec![3, 12, 128]);
+    assert_eq!(next.output_shapes[3], vec![4, 12, 128]);
+    assert_eq!(next.score_scale, 1.0 / 128.0);
+    assert_eq!(next.window_left, Some(32768));
+    assert!(profile.plan_sequence(0, 1, 0).is_err());
+    assert!(profile.plan_sequence(4, 0, 0).is_err());
+    assert!(
+        profile
+            .plan_sequence(4, profile.max_query_tokens + 1, 0)
+            .is_err()
+    );
+    assert!(
+        profile
+            .plan_sequence(4, 1, profile.max_history_tokens)
+            .is_err()
+    );
+    assert!(profile.plan_sequence(4, 1, usize::MAX).is_err());
+    let mut invalid = profile;
+    invalid.query_heads = 1;
+    assert!(invalid.plan_sequence(4, 1, 0).is_err());
+}

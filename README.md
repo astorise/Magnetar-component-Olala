@@ -22,6 +22,8 @@ settings and derive head grouping, score scale, window and the portable CPU
 reference's query/history size limits. It lists the expected checkpoint tensors
 in operator input order, including the matrix transpositions required on load;
 their names, shapes and storage dtypes were checked against the pinned header.
+For a contiguous sequence it can plan the portable operator's input/output
+shapes, attention parameters and explicit raw-state and history boundaries.
 This validates a configuration profile;
 it does not make the checkpoint executable. In particular, the CPU graph's
 synthetic f32 projection fixture is not a qualification of real bfloat16

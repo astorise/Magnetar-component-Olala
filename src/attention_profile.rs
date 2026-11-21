@@ -40,6 +40,23 @@ pub struct AttentionWeightSpec {
     pub transpose: bool,
 }
 
+/// One projected-attention invocation with explicit, caller-owned state.
+#[derive(Clone, Debug, PartialEq)]
+pub struct AttentionInvocationPlan {
+    pub operator: &'static str,
+    pub sequence_length: usize,
+    pub past_length: usize,
+    pub input_shapes: Vec<Vec<usize>>,
+    pub output_shapes: Vec<Vec<usize>>,
+    pub weights: Vec<AttentionWeightSpec>,
+    pub epsilon: f64,
+    pub zero_centered_norm: bool,
+    pub score_scale: f64,
+    pub softcap: f64,
+    pub window_left: Option<usize>,
+    pub round_bfloat16: bool,
+}
+
 #[derive(Deserialize)]
 struct RawAttention {
     hidden_size: usize,
@@ -232,5 +249,96 @@ impl AttentionProfile {
             vector("k_norm.norm.weight", self.head_dim),
             vector("softmax_scaler", self.query_heads),
         ])
+    }
+
+    /// Plan one contiguous sequence of this layer. A zero past uses a single
+    /// ignored K/V history row; later calls pass the preceding output histories.
+    /// The caller must commit both raw states together with the two histories;
+    /// the raw states are distinct from attention's growing KV history.
+    pub fn plan_sequence(
+        &self,
+        layer: usize,
+        tokens: usize,
+        past_length: usize,
+    ) -> Result<AttentionInvocationPlan, ConfigError> {
+        let weights = self.weight_specs(layer)?;
+        let valid_positive =
+            |value: f64| value.is_finite() && (value as f32).is_finite() && value as f32 > 0.0;
+        if self.kv_heads == 0
+            || self.signal_heads == 0
+            || self.query_heads.checked_sub(self.kv_heads) != Some(self.signal_heads)
+            || !self.signal_heads.is_multiple_of(self.kv_heads)
+            || !valid_positive(self.epsilon)
+            || !valid_positive(self.score_scale)
+            || !self.softcap.is_finite()
+            || self.softcap < 0.0
+            || (self.softcap > 0.0 && !valid_positive(self.softcap))
+            || self
+                .window_left
+                .is_some_and(|window| i64::try_from(window).is_err())
+        {
+            return Err(ConfigError("invalid attention profile".into()));
+        }
+        let total = past_length
+            .checked_add(tokens)
+            .filter(|&n| {
+                tokens > 0
+                    && tokens <= self.max_query_tokens
+                    && n <= self.max_history_tokens
+                    && n <= MAX_POSITIONS
+            })
+            .ok_or_else(|| {
+                ConfigError("attention sequence exceeds the supported profile".into())
+            })?;
+        let widths = [
+            self.hidden_size,
+            self.query_heads * self.head_dim,
+            self.kv_heads * self.rank,
+            self.rank * self.head_dim,
+            self.kv_heads,
+        ];
+        if widths
+            .into_iter()
+            .any(|width| tokens.checked_mul(width).is_none_or(|n| n > MAX_ELEMENTS))
+            || total
+                .checked_mul(self.kv_heads * self.head_dim)
+                .is_none_or(|n| n > MAX_ELEMENTS)
+        {
+            return Err(ConfigError(
+                "attention tensors exceed the portable reference limit".into(),
+            ));
+        }
+        let state = vec![self.kv_heads, self.head_dim];
+        let prior_history = vec![past_length.max(1), self.kv_heads, self.head_dim];
+        let next_history = vec![total, self.kv_heads, self.head_dim];
+        let mut input_shapes = vec![
+            vec![tokens, self.hidden_size],
+            state.clone(),
+            state.clone(),
+            prior_history.clone(),
+            prior_history,
+            vec![tokens],
+        ];
+        input_shapes.extend(weights.iter().map(|weight| weight.operator_shape.clone()));
+        Ok(AttentionInvocationPlan {
+            operator: "projected-differential-attention",
+            sequence_length: tokens,
+            past_length,
+            input_shapes,
+            output_shapes: vec![
+                vec![tokens, self.signal_heads, self.head_dim],
+                state.clone(),
+                state,
+                next_history.clone(),
+                next_history,
+            ],
+            weights,
+            epsilon: self.epsilon,
+            zero_centered_norm: self.zero_centered_norm,
+            score_scale: self.score_scale,
+            softcap: self.softcap,
+            window_left: self.window_left,
+            round_bfloat16: true,
+        })
     }
 }
