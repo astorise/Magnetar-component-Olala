@@ -167,3 +167,14 @@ fn attention_profile_preserves_other_supported_scaling_and_window() {
     assert_eq!(profile.max_query_tokens, 100);
     assert_eq!(profile.max_history_tokens, 100);
 }
+
+#[test]
+fn attention_profile_limits_the_widest_intermediate_not_just_query() {
+    let mut config: serde_json::Value =
+        serde_json::from_slice(include_bytes!("fixtures/olala-mini.config.json")).unwrap();
+    config["hidden_size"] = serde_json::json!(1);
+    config["tpa_rank"] = serde_json::json!(100000);
+    let profile =
+        AttentionProfile::from_huggingface_config(&serde_json::to_vec(&config).unwrap()).unwrap();
+    assert_eq!(profile.max_query_tokens, 67_108_864 / (100000 * 128));
+}

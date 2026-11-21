@@ -160,6 +160,10 @@ impl AttentionProfile {
             .max_position_embeddings
             .min(MAX_POSITIONS)
             .min(MAX_ELEMENTS / kv_width);
+        let widest_query_row = [raw.hidden_size, query_width, a_width, b_width, kv_heads]
+            .into_iter()
+            .max()
+            .expect("nonempty width list");
         Ok(Self {
             attention_layers: layout
                 .layers()
@@ -180,7 +184,7 @@ impl AttentionProfile {
             score_scale,
             softcap: raw.softcap_attn,
             window_left,
-            max_query_tokens: (MAX_ELEMENTS / query_width).min(max_history_tokens),
+            max_query_tokens: (MAX_ELEMENTS / widest_query_row).min(max_history_tokens),
             max_history_tokens,
         })
     }
