@@ -1,14 +1,28 @@
 # magnetar-component-olala
 
-Placeholder for OVHcloud Olala in [Magnetar](https://github.com/astorise/Magnetar).
+Olala model component for [Magnetar](https://github.com/astorise/Magnetar).
 
 ## Status
 
-This is a scaffold only. It has no model graph, loader, weights, inference implementation, Component Model exports or supported checkpoint. Creating this repository does not make the model runnable in Magnetar.
+The initial Rust library reads Olala's ordered Mamba-3 and differential TPA
+attention layer layout from a Hugging Face configuration. It also contains
+independent CPU references for the sigmoid expert router, with biased
+selection and unbiased combination weights, and for learned geodesic residual
+updates. Integration tests exercise the published Olala mini configuration and
+the actual upstream PyTorch routing and geodesic code at a pinned revision,
+plus malformed inputs. The library does not load weights or implement graph
+production, recurrent execution, Component Model exports, or inference; Olala
+is not yet runnable in Magnetar.
 
 ## Work required
 
-Mamba-3 recurrent state, hybrid attention, mixture-of-experts routing and checkpoint-specific loading.
+Mamba-3 recurrent state, hybrid attention, mixture-of-experts routing and
+checkpoint-specific loading remain to be implemented. The necessary Magnetar
+state and graph work is tracked in [Magnetar #213](https://github.com/astorise/Magnetar/issues/213),
+Provider-side routing in [Magnetar #216](https://github.com/astorise/Magnetar/issues/216),
+geodesic updates in [Magnetar #220](https://github.com/astorise/Magnetar/issues/220),
+and differential tensor-product attention in
+[Magnetar #222](https://github.com/astorise/Magnetar/issues/222).
 
 A real implementation must identify a specific checkpoint and its license, integrate the relevant Magnetar component and runtime contracts, and validate outputs against an independent reference. See the [upstream model or project](https://huggingface.co/OVHaiLLM/Olala-v1.0-mini-7A1B). Model weights are not included.
 
