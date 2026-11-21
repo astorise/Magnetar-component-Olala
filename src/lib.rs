@@ -8,6 +8,7 @@ use std::error::Error;
 use std::fmt;
 
 pub mod geodesic;
+pub mod mamba3;
 pub mod routing;
 
 const MAX_LAYERS: usize = 4096;

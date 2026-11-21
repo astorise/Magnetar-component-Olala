@@ -10,9 +10,12 @@ independent CPU references for the sigmoid expert router, with biased
 selection and unbiased combination weights, and for learned geodesic residual
 updates. Integration tests exercise the published Olala mini configuration and
 the actual upstream PyTorch routing and geodesic code at a pinned revision,
-plus malformed inputs. The library does not load weights or implement graph
-production, recurrent execution, Component Model exports, or inference; Olala
-is not yet runnable in Magnetar.
+plus malformed inputs. A separate CPU reference evaluates the preprocessed
+Mamba-3 MIMO recurrence with explicit angle, SSM, previous-key and previous-input
+states; its synthetic prefill, continuation and reset cases match pinned
+upstream PyTorch. The library does not load weights or implement the complete
+Mamba-3 layer, graph production, Runtime-managed recurrent state, Component
+Model exports, or inference; Olala is not yet runnable in Magnetar.
 
 ## Work required
 

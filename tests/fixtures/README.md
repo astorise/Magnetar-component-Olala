@@ -24,3 +24,10 @@ PyTorch version, invoking its `OlalaGeodesicNorm.forward` directly with
 synthetic vectors and scalar parameters. It covers ordinary, zero, near-zero,
 collinear, upper-clamped, negative-angle, and later-layer cases. Regenerate
 it with `python tests/fixtures/generate_geodesic_reference.py /path/to/modeling_olala.py`.
+
+`olala-mamba3-reference.json` executes the pinned source's independent
+PyTorch prefill and cached-step functions with synthetic projected inputs,
+including one and two Q/K groups. Tests compare outputs and all four states,
+chunk continuation and reset. This fixture tests the recurrence core, not the
+checkpoint's projection, normalization or full model. Regenerate it with
+`python tests/fixtures/generate_mamba3_reference.py /path/to/modeling_olala.py`.
