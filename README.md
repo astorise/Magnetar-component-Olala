@@ -29,6 +29,13 @@ it does not make the checkpoint executable. In particular, the CPU graph's
 synthetic f32 projection fixture is not a qualification of real bfloat16
 checkpoint inference.
 
+For the same pinned mini checkpoint, the library validates the Mamba-3
+configuration and plans the portable mixer's four state slots, operator
+shapes and eleven learned inputs. Their names, shapes and dtypes match the
+Safetensors header for all 29 Mamba-3 layers. It can reorder already-decoded
+f32 weights, including swapping the checkpoint's head/rank axes. It does
+not read tensor bytes, implement BF16 arithmetic or execute a hybrid model.
+
 ## Work required
 
 Mamba-3 recurrent state, hybrid attention, mixture-of-experts routing and

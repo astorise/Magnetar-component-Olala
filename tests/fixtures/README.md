@@ -14,6 +14,11 @@ source header including its eight-byte length prefix has SHA-256
 Extract it with `python tests/fixtures/generate_attention_header.py /path/to/header`;
 no tensor values are included.
 
+`olala-mamba3-header.json` contains names, shapes and dtypes for the eleven
+mixer tensors of each of the 29 Mamba-3 layers in that same verified header.
+Regenerate it with `python tests/fixtures/generate_mamba3_header.py /path/to/header`.
+It contains no tensor values.
+
 `olala-routing-reference.json` was generated with PyTorch 2.15.0 by invoking
 the actual `OlalaMoE.forward` implementation from
 [`modeling_olala.py`](https://huggingface.co/OVHaiLLM/Olala-v1.0-mini-7A1B/blob/b40f8165ee2254c18601220e19842600c6d91794/modeling_olala.py)

@@ -10,6 +10,7 @@ use std::fmt;
 pub mod attention_profile;
 pub mod geodesic;
 pub mod mamba3;
+pub mod mamba3_profile;
 pub mod routing;
 
 const MAX_LAYERS: usize = 4096;
