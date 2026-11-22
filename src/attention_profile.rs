@@ -40,6 +40,39 @@ pub struct AttentionWeightSpec {
     pub transpose: bool,
 }
 
+impl AttentionWeightSpec {
+    /// Reorder an already-decoded checkpoint tensor for the f32 operator.
+    /// The caller must verify the name, dtype, shape and payload separately.
+    pub fn reorder_f32(&self, values: &[f32]) -> Result<Vec<f32>, ConfigError> {
+        let count = self
+            .checkpoint_shape
+            .iter()
+            .try_fold(1usize, |count, &dimension| {
+                count
+                    .checked_mul(dimension)
+                    .filter(|&value| dimension > 0 && value <= MAX_ELEMENTS)
+            })
+            .filter(|_| !self.checkpoint_shape.is_empty())
+            .ok_or_else(|| ConfigError("invalid attention weight shape".into()))?;
+        if values.len() != count || values.iter().any(|value| !value.is_finite()) {
+            return Err(ConfigError("invalid attention weight values".into()));
+        }
+        match (self.transpose, self.checkpoint_shape.as_slice()) {
+            (false, shape) if self.operator_shape == shape => Ok(values.to_vec()),
+            (true, [rows, columns]) if self.operator_shape == [*columns, *rows] => {
+                let mut output = vec![0.0; count];
+                for row in 0..*rows {
+                    for column in 0..*columns {
+                        output[column * rows + row] = values[row * columns + column];
+                    }
+                }
+                Ok(output)
+            }
+            _ => Err(ConfigError("invalid attention weight transform".into())),
+        }
+    }
+}
+
 /// One projected-attention invocation with explicit, caller-owned state.
 #[derive(Clone, Debug, PartialEq)]
 pub struct AttentionInvocationPlan {

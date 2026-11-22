@@ -1,4 +1,30 @@
-use magnetar_component_olala::{LayerKind, LayerLayout, attention_profile::AttentionProfile};
+use magnetar_component_olala::{
+    LayerKind, LayerLayout,
+    attention_profile::{AttentionProfile, AttentionWeightSpec},
+};
+
+#[test]
+fn attention_weight_reordering_checks_values_and_layout() {
+    let mut weight = AttentionWeightSpec {
+        checkpoint_name: "query".into(),
+        checkpoint_shape: vec![2, 3],
+        operator_shape: vec![3, 2],
+        transpose: true,
+    };
+    assert_eq!(
+        weight.reorder_f32(&[0., 1., 2., 3., 4., 5.]).unwrap(),
+        vec![0., 3., 1., 4., 2., 5.]
+    );
+    assert!(weight.reorder_f32(&[0.]).is_err());
+    assert!(weight.reorder_f32(&[0., 1., 2., 3., 4., f32::NAN]).is_err());
+    weight.operator_shape = vec![2, 3];
+    assert!(weight.reorder_f32(&[0., 1., 2., 3., 4., 5.]).is_err());
+    weight.transpose = false;
+    assert_eq!(
+        weight.reorder_f32(&[0., 1., 2., 3., 4., 5.]).unwrap(),
+        vec![0., 1., 2., 3., 4., 5.]
+    );
+}
 
 #[test]
 fn published_olala_mini_layout_preserves_every_mixer_in_order() {
