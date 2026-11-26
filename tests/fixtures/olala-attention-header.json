@@ -1,0 +1,76 @@
+{
+  "model.layers.4.mixer.W_A_k.weight": {
+    "dtype": "BF16",
+    "shape": [
+      48,
+      1536
+    ]
+  },
+  "model.layers.4.mixer.W_A_v.weight": {
+    "dtype": "BF16",
+    "shape": [
+      48,
+      1536
+    ]
+  },
+  "model.layers.4.mixer.W_B_k.weight": {
+    "dtype": "BF16",
+    "shape": [
+      512,
+      1536
+    ]
+  },
+  "model.layers.4.mixer.W_B_v.weight": {
+    "dtype": "BF16",
+    "shape": [
+      512,
+      1536
+    ]
+  },
+  "model.layers.4.mixer.c_q.weight": {
+    "dtype": "BF16",
+    "shape": [
+      6144,
+      1536
+    ]
+  },
+  "model.layers.4.mixer.k_norm.norm.weight": {
+    "dtype": "BF16",
+    "shape": [
+      128
+    ]
+  },
+  "model.layers.4.mixer.lambda_proj.weight": {
+    "dtype": "BF16",
+    "shape": [
+      12,
+      1536
+    ]
+  },
+  "model.layers.4.mixer.q_norm.norm.weight": {
+    "dtype": "BF16",
+    "shape": [
+      128
+    ]
+  },
+  "model.layers.4.mixer.shift_proj_k.weight": {
+    "dtype": "BF16",
+    "shape": [
+      12,
+      1536
+    ]
+  },
+  "model.layers.4.mixer.shift_proj_v.weight": {
+    "dtype": "BF16",
+    "shape": [
+      12,
+      1536
+    ]
+  },
+  "model.layers.4.mixer.softmax_scaler": {
+    "dtype": "F32",
+    "shape": [
+      48
+    ]
+  }
+}
